@@ -19,3 +19,10 @@ jobs:
           aws workspaces start-workspaces --start-workspace-requests WorkspaceId=${{ secrets.AWS_WORKSPACE_ID }}
           aws workspaces modify-workspace-properties --workspace-id ${{ secrets.AWS_WORKSPACE_ID }} --workspace-properties RunningMode=AUTO_STOP,RunningModeAutoStopTimeoutInMinutes=300
 
+      - name: Connection instructions
+        run: |
+          echo "The WorkSpace is starting."
+          echo "Once it is running you can connect using the AWS WorkSpaces client:"
+          echo "https://clients.amazonworkspaces.com/"
+          echo "Use the registration code associated with your WorkSpace to sign in."
+
