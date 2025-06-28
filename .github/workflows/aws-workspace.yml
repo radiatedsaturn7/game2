@@ -2,6 +2,13 @@ name: Launch AWS WorkSpace
 
 on:
   workflow_dispatch:
+    inputs:
+      workspace_username:
+        description: "Directory username for the WorkSpace"
+        required: true
+      workspace_password:
+        description: "Password to set for the user"
+        required: true
 
 jobs:
   start-workspace:
@@ -19,18 +26,24 @@ jobs:
           aws workspaces start-workspaces --start-workspace-requests WorkspaceId=${{ secrets.AWS_WORKSPACE_ID }}
           aws workspaces modify-workspace-properties --workspace-id ${{ secrets.AWS_WORKSPACE_ID }} --workspace-properties RunningMode=AUTO_STOP,RunningModeAutoStopTimeoutInMinutes=300
 
-      - name: Get registration code
-        id: regcode
+      - name: Get directory info
+        id: directory
         run: |
           DIR_ID=$(aws workspaces describe-workspaces --workspace-ids ${{ secrets.AWS_WORKSPACE_ID }} --query 'Workspaces[0].DirectoryId' --output text)
           REG_CODE=$(aws workspaces describe-workspace-directories --directory-ids "$DIR_ID" --query 'Directories[0].RegistrationCode' --output text)
+          echo "dir=$DIR_ID" >> "$GITHUB_OUTPUT"
           echo "code=$REG_CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Set WorkSpace password
+        run: |
+          aws ds reset-user-password --directory-id ${{ steps.directory.outputs.dir }} --user-name "${{ inputs.workspace_username }}" --new-password "${{ inputs.workspace_password }}"
 
       - name: Connection instructions
         run: |
           echo "The WorkSpace is starting."
           echo "Once it is running you can connect using the AWS WorkSpaces client:"
           echo "https://clients.amazonworkspaces.com/"
-          echo "Registration code: ${{ steps.regcode.outputs.code }}"
-          echo "Sign in with your WorkSpace username and password."
+          echo "Registration code: ${{ steps.directory.outputs.code }}"
+          echo "Username: ${{ inputs.workspace_username }}"
+          echo "Use the password you provided when launching the workflow."
 
