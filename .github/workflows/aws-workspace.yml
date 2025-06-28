@@ -22,14 +22,31 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
       - name: Start WorkSpace
+        id: workspace
         run: |
-          aws workspaces start-workspaces --start-workspace-requests WorkspaceId=${{ secrets.AWS_WORKSPACE_ID }}
-          aws workspaces modify-workspace-properties --workspace-id ${{ secrets.AWS_WORKSPACE_ID }} --workspace-properties RunningMode=AUTO_STOP,RunningModeAutoStopTimeoutInMinutes=300
+          set -e
+          WS_ID="${{ secrets.AWS_WORKSPACE_ID }}"
+          if [ -n "$WS_ID" ]; then
+            if ! aws workspaces describe-workspaces --workspace-ids "$WS_ID" >/dev/null 2>&1; then
+              WS_ID=""
+            fi
+          fi
+
+          if [ -z "$WS_ID" ]; then
+            WS_ID=$(aws workspaces create-workspaces \
+              --workspaces DirectoryId=${{ secrets.AWS_DIRECTORY_ID }},UserName=${{ inputs.workspace_username }},BundleId=${{ secrets.AWS_BUNDLE_ID }},WorkspaceProperties={RunningMode=AUTO_STOP,RunningModeAutoStopTimeoutInMinutes=300} \
+              --query 'PendingRequests[0].WorkspaceId' --output text)
+          else
+            aws workspaces modify-workspace-properties --workspace-id "$WS_ID" --workspace-properties RunningMode=AUTO_STOP,RunningModeAutoStopTimeoutInMinutes=300
+          fi
+
+          aws workspaces start-workspaces --start-workspace-requests WorkspaceId=$WS_ID
+          echo "id=$WS_ID" >> "$GITHUB_OUTPUT"
 
       - name: Get directory info
         id: directory
         run: |
-          DIR_ID=$(aws workspaces describe-workspaces --workspace-ids ${{ secrets.AWS_WORKSPACE_ID }} --query 'Workspaces[0].DirectoryId' --output text)
+          DIR_ID=$(aws workspaces describe-workspaces --workspace-ids ${{ steps.workspace.outputs.id }} --query 'Workspaces[0].DirectoryId' --output text)
           REG_CODE=$(aws workspaces describe-workspace-directories --directory-ids "$DIR_ID" --query 'Directories[0].RegistrationCode' --output text)
           echo "dir=$DIR_ID" >> "$GITHUB_OUTPUT"
           echo "code=$REG_CODE" >> "$GITHUB_OUTPUT"
