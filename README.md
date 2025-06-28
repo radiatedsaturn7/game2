@@ -8,16 +8,25 @@ Use the **Launch AWS WorkSpace** workflow from the Actions tab to start your des
 
 [Run the workflow](../../actions/workflows/aws-workspace.yml)
 
-AWS credentials and the WorkSpace ID must be provided as repository secrets:
+AWS credentials and WorkSpace details must be provided as repository secrets:
 
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_REGION` (default `us-east-1` if omitted)
-- `AWS_WORKSPACE_ID` – the ID of the WorkSpace to start
+- `AWS_WORKSPACE_ID` – optional ID of an existing WorkSpace
+- `AWS_DIRECTORY_ID` – the directory in which to create a WorkSpace if needed
+- `AWS_BUNDLE_ID` – the bundle to use when creating a new WorkSpace
+
+  If `AWS_WORKSPACE_ID` is not set or does not correspond to an existing
+  WorkSpace, the workflow will automatically create one using the directory and
+  bundle IDs provided. In either case the WorkSpace is started and configured to
+  stop automatically after five hours.
 
 Set these secrets in your repository under **Settings → Secrets and variables → Actions**. You can open the page directly for this repo [here](../../settings/secrets/actions).
 
 When running the workflow you'll be prompted for your WorkSpace username and a password to set. The workflow resets the password for that user and then prints the registration code so you can connect.
+
+The username and password are entered each time you dispatch the workflow and are **not** stored in the repository.
 
 ## Initial setup
 
