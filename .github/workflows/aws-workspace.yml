@@ -19,10 +19,18 @@ jobs:
           aws workspaces start-workspaces --start-workspace-requests WorkspaceId=${{ secrets.AWS_WORKSPACE_ID }}
           aws workspaces modify-workspace-properties --workspace-id ${{ secrets.AWS_WORKSPACE_ID }} --workspace-properties RunningMode=AUTO_STOP,RunningModeAutoStopTimeoutInMinutes=300
 
+      - name: Get registration code
+        id: regcode
+        run: |
+          DIR_ID=$(aws workspaces describe-workspaces --workspace-ids ${{ secrets.AWS_WORKSPACE_ID }} --query 'Workspaces[0].DirectoryId' --output text)
+          REG_CODE=$(aws workspaces describe-workspace-directories --directory-ids "$DIR_ID" --query 'Directories[0].RegistrationCode' --output text)
+          echo "code=$REG_CODE" >> "$GITHUB_OUTPUT"
+
       - name: Connection instructions
         run: |
           echo "The WorkSpace is starting."
           echo "Once it is running you can connect using the AWS WorkSpaces client:"
           echo "https://clients.amazonworkspaces.com/"
-          echo "Use the registration code associated with your WorkSpace to sign in."
+          echo "Registration code: ${{ steps.regcode.outputs.code }}"
+          echo "Sign in with your WorkSpace username and password."
 

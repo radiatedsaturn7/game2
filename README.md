@@ -26,4 +26,6 @@ powershell -ExecutionPolicy Bypass -File scripts/setup_workspace.ps1
 ```
 
 Once the WorkSpace is running you can connect with the [AWS WorkSpaces client](https://clients.amazonworkspaces.com/) from Chrome OS.
+The workflow prints the registration code after starting the WorkSpace so you can sign in.
+Use that code along with your WorkSpace username and password when prompted by the client.
 
